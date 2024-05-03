@@ -1,7 +1,7 @@
 const notes = require('express').Router();
 
 // Helper functions for reading and writing to the JSON file
-const { readFromFile, readAndAppend } = require('../helpers/fsUtils');
+const { readFromFile, readAndAppend, writeToFile } = require('../helpers/fsUtils');
 
 // Helper method for generating unique ids
 const uuid = require('../helpers/uuid');
@@ -20,7 +20,7 @@ notes.post('/', (req, res) => {
       const newNote = {
         title,
         text,
-        note_id: uuid(),
+        id: uuid(),
       };
   
       readAndAppend(newNote, './db/db.json');
@@ -28,6 +28,19 @@ notes.post('/', (req, res) => {
     } else {
       res.error('Error in adding note');
     }
+  });
+
+  notes.delete("/:id", (req, res) => {
+
+    const id = req.params.id;
+
+    readFromFile("./db/db.json").then((data) => JSON.parse(data))
+    .then((json) => {
+      const result = json.filter((note) => note.id != id);
+      writeToFile("./db/db.json", result);
+      res.json("Note deleted!");
+      console.info(`${req.method} request received to delete a note`);
+    });
   });
 
 module.exports = notes;
